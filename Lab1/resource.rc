@@ -1,0 +1,43 @@
+#pragma code_page(65001)
+#include <windows.h>
+#include "resource.h"
+
+IDR_MENU1 MENU
+BEGIN
+    POPUP "Меню"
+    BEGIN
+        MENUITEM "Робота1", IDM_WORK1
+        MENUITEM "Робота2", IDM_WORK2
+    END
+END
+
+IDD_DIALOG_B1_STEP1 DIALOGEX 0, 0, 160, 60
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Робота 1 - Крок 1"
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "Далі >", IDC_BTN_NEXT, 25, 35, 50, 14
+    PUSHBUTTON      "Відміна", IDCANCEL, 85, 35, 50, 14
+    LTEXT           "Це перше вікно діалогу", -1, 30, 15, 100, 8
+END
+
+IDD_DIALOG_B1_STEP2 DIALOGEX 0, 0, 160, 60
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Робота 1 - Крок 2"
+FONT 8, "MS Sans Serif"
+BEGIN
+    PUSHBUTTON      "< Назад", IDC_BTN_BACK, 10, 35, 40, 14
+    PUSHBUTTON      "Так", IDOK, 60, 35, 40, 14
+    PUSHBUTTON      "Відміна", IDCANCEL, 110, 35, 40, 14
+    LTEXT           "Це друге вікно діалогу", -1, 30, 15, 100, 8
+END
+
+IDD_DIALOG_B2 DIALOGEX 0, 0, 150, 100
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Робота 2 - Вибір групи"
+FONT 8, "MS Sans Serif"
+BEGIN
+    LISTBOX         IDC_LISTBOX, 10, 10, 130, 50, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+    PUSHBUTTON      "Так", IDOK, 20, 75, 50, 14
+    PUSHBUTTON      "Відміна", IDCANCEL, 80, 75, 50, 14
+END
