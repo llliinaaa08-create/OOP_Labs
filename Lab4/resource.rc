@@ -1,0 +1,27 @@
+#include <windows.h>
+#include "resource.h"
+
+#pragma code_page(65001)
+
+IDR_MAIN_MENU MENU
+BEGIN
+    POPUP "Файл"
+    BEGIN
+        MENUITEM "Вихід", IDM_EXIT
+    END
+    POPUP "Об'єкти"
+    BEGIN
+        MENUITEM "Крапка", IDM_POINT
+        MENUITEM "Лінія", IDM_LINE
+        MENUITEM "Прямокутник", IDM_RECTANGLE
+        MENUITEM "Еліпс", IDM_ELLIPSE
+        MENUITEM "Лінія з кружечками", IDM_LINEOO
+        MENUITEM "Куб", IDM_CUBE
+    END
+    POPUP "Довідка"
+    BEGIN
+        MENUITEM "Про програму", IDM_ABOUT
+    END
+END
+
+IDB_TOOLBAR BITMAP "toolbar.bmp"
