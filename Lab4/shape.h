@@ -93,30 +93,39 @@ public:
 class CubeShape : public RectangleShape, public LineShape {
 public:
     void Draw(HDC hdc) override {
-        HPEN hPen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
-        HBRUSH hNullBrush = (HBRUSH)GetStockObject(NULL_BRUSH); // Прозора кисть
+        // Зберігаємо початкові координати куба
+        long ox1 = x1, oy1 = y1, ox2 = x2, oy2 = y2;
 
-        HPEN hOldPen = (HPEN)SelectObject(hdc, hPen);
-        HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hNullBrush);
+        int dx = (ox2 - ox1) / 3;
+        int dy = (oy2 - oy1) / 3;
 
-        int dx = (x2 - x1) / 3;
-        int dy = (y2 - y1) / 3;
+        // 1. Задня грань — через RectangleShape::Draw
+        SetPoints(ox1 + dx, oy1 - dy, ox2 + dx, oy2 - dy);
+        RectangleShape::Draw(hdc);
 
-        // Задній прямокутник
-        Rectangle(hdc, x1 + dx, y1 - dy, x2 + dx, y2 - dy);
+        // 2. Передня грань — через RectangleShape::Draw
+        SetPoints(ox1, oy1, ox2, oy2);
+        RectangleShape::Draw(hdc);
 
-        // Передній прямокутник
-        Rectangle(hdc, x1, y1, x2, y2);
+        // 3. Чотири ребра — через LineShape::Draw
+        // Ліве верхнє ребро
+        SetPoints(ox1, oy1, ox1 + dx, oy1 - dy);
+        LineShape::Draw(hdc);
 
-        // З'єднувальні лінії кутів
-        MoveToEx(hdc, x1, y1, NULL); LineTo(hdc, x1 + dx, y1 - dy);
-        MoveToEx(hdc, x2, y1, NULL); LineTo(hdc, x2 + dx, y1 - dy);
-        MoveToEx(hdc, x1, y2, NULL); LineTo(hdc, x1 + dx, y2 - dy);
-        MoveToEx(hdc, x2, y2, NULL); LineTo(hdc, x2 + dx, y2 - dy);
+        // Праве верхнє ребро
+        SetPoints(ox2, oy1, ox2 + dx, oy1 - dy);
+        LineShape::Draw(hdc);
 
-        SelectObject(hdc, hOldPen);
-        SelectObject(hdc, hOldBrush);
-        DeleteObject(hPen);
+        // Ліве нижнє ребро
+        SetPoints(ox1, oy2, ox1 + dx, oy2 - dy);
+        LineShape::Draw(hdc);
+
+        // Праве нижнє ребро
+        SetPoints(ox2, oy2, ox2 + dx, oy2 - dy);
+        LineShape::Draw(hdc);
+
+        // Відновлюємо початкові координати куба
+        SetPoints(ox1, oy1, ox2, oy2);
     }
 };
 
