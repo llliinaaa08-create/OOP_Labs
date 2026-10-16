@@ -1,0 +1,38 @@
+#include <windows.h>
+#include "resource.h"
+
+#pragma code_page(65001)
+
+IDR_MAIN_MENU MENU
+BEGIN
+    POPUP "Файл"
+    BEGIN
+        MENUITEM "Вихід", IDM_EXIT
+    END
+    POPUP "Об'єкти"
+    BEGIN
+        MENUITEM "Крапка", IDM_POINT
+        MENUITEM "Лінія", IDM_LINE
+        MENUITEM "Прямокутник", IDM_RECTANGLE
+        MENUITEM "Еліпс", IDM_ELLIPSE
+        MENUITEM "Лінія з кружечками", IDM_LINEOO
+        MENUITEM "Куб", IDM_CUBE
+        MENUITEM SEPARATOR
+        MENUITEM "Таблиця об'єктів", IDM_TABLE
+        MENUITEM "Зберегти в CSV...", IDM_EXPORT
+    END
+    POPUP "Довідка"
+    BEGIN
+        MENUITEM "Про програму", IDM_ABOUT
+    END
+END
+
+IDB_TOOLBAR BITMAP "toolbar.bmp"
+
+IDD_TABLE_DIALOG DIALOGEX 0, 0, 260, 180
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Таблиця об'єктів"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    CONTROL "", IDC_LIST_TABLE, "SysListView32", LVS_REPORT | LVS_SINGLESEL | WS_BORDER | WS_TABSTOP, 7, 7, 246, 166
+END
