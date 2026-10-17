@@ -20,6 +20,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Таблиця об'єктів", IDM_TABLE
         MENUITEM "Зберегти в CSV...", IDM_EXPORT
+        MENUITEM "Завантажити з CSV...", IDM_IMPORT
     END
     POPUP "Довідка"
     BEGIN

@@ -29,6 +29,7 @@ public:
     void Toggle(HWND hWndParent);
     void Update();
     void ExportToCSV(HWND hWndParent);
+    void ImportFromCSV(HWND hWndParent); 
 
     HWND GetHWnd() const { return hDlg; }
 };

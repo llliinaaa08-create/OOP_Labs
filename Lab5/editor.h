@@ -10,7 +10,7 @@
 #include "shape.h"
 #include "resource.h"
 
-const int MAX_SHAPES = 106; // Варіант 6: N = 6 + 100 = 106
+const int MAX_SHAPES = 106;
 
 class MyEditor {
 private:
@@ -19,6 +19,7 @@ private:
     Shape* pcshape[MAX_SHAPES];
     int shapeCount;
     int currentTool;
+    int selectedIndex; 
 
     bool isDrawing;
     POINT startPoint;
@@ -28,7 +29,6 @@ private:
     HWND hToolbar;
     HPEN hRubberPen;
 
-    
     MyEditor();
     ~MyEditor();
     MyEditor(const MyEditor&) = delete;
@@ -38,7 +38,6 @@ private:
     void DrawRubberBand(HWND hWnd, POINT pt1, POINT pt2);
 
 public:
-    
     static MyEditor* getInstance();
     static void destroyInstance();
 
@@ -52,12 +51,16 @@ public:
     void OnLButtonUp(HWND hWnd, LPARAM lParam);
     void OnPaint(HWND hWnd);
 
-    
     int GetShapeCount() const { return shapeCount; }
     Shape* GetShape(int index) const {
         if (index >= 0 && index < shapeCount) return pcshape[index];
         return nullptr;
     }
+
+    void SetSelectedIndex(int index) { selectedIndex = index; }
+    void DeleteShape(int index);
+    void ClearShapes();
+    void AddShape(Shape* pShape);
 };
 
 #endif

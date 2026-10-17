@@ -19,9 +19,24 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
                 MyTable::getInstance()->Toggle(hWnd);
             } else if (LOWORD(wParam) == IDM_EXPORT) {
                 MyTable::getInstance()->ExportToCSV(hWnd);
+            } else if (LOWORD(wParam) == IDM_IMPORT) {
+                MyTable::getInstance()->ImportFromCSV(hWnd);
             } else {
                 MyEditor::getInstance()->OnCommand(wParam);
             }
+            break;
+
+        // Бонус 1: Підсвічуємо обрану в таблиці фігуру
+        case WM_TABLE_SELECT_SHAPE:
+            MyEditor::getInstance()->SetSelectedIndex((int)wParam);
+            InvalidateRect(hWnd, NULL, TRUE);
+            break;
+
+        // Бонус 2: Видаляємо обрану фігуру
+        case WM_TABLE_DELETE_SHAPE:
+            MyEditor::getInstance()->DeleteShape((int)wParam);
+            MyTable::getInstance()->Update();
+            InvalidateRect(hWnd, NULL, TRUE);
             break;
 
         case WM_NOTIFY:
@@ -37,7 +52,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
 
         case WM_LBUTTONUP:
             MyEditor::getInstance()->OnLButtonUp(hWnd, lParam);
-            // Автоматично оновлюємо таблицю при додаванні нової фігури
             MyTable::getInstance()->Update();
             break;
 
@@ -46,7 +60,6 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) 
             break;
 
         case WM_DESTROY:
-            // Спочатку закриваємо й знищуємо вікно таблиці, потім редактор
             MyTable::destroyInstance();
             MyEditor::destroyInstance();
             PostQuitMessage(0);
@@ -81,7 +94,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0)) {
-        // Перевірка повідомлень для немодального діалогового вікна таблиці
         HWND hTableDlg = MyTable::getInstance()->GetHWnd();
         if (!hTableDlg || !IsDialogMessage(hTableDlg, &msg)) {
             TranslateMessage(&msg);

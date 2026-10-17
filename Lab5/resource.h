@@ -15,8 +15,12 @@
 
 #define IDM_TABLE         209
 #define IDM_EXPORT        210
+#define IDM_IMPORT        211 
 
 #define IDD_TABLE_DIALOG  301
 #define IDC_LIST_TABLE    3001
+
+#define WM_TABLE_SELECT_SHAPE (WM_USER + 100)
+#define WM_TABLE_DELETE_SHAPE (WM_USER + 101)
 
 #endif

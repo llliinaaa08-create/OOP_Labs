@@ -1,6 +1,5 @@
 #include "editor.h"
 
-// Ініціалізація статичного вказівника
 MyEditor* MyEditor::pInstance = nullptr;
 
 MyEditor* MyEditor::getInstance() {
@@ -19,6 +18,7 @@ void MyEditor::destroyInstance() {
 
 MyEditor::MyEditor() {
     shapeCount = 0;
+    selectedIndex = -1;
     currentTool = IDM_POINT;
     isDrawing = false;
     hToolbar = NULL;
@@ -31,14 +31,40 @@ MyEditor::MyEditor() {
 }
 
 MyEditor::~MyEditor() {
+    ClearShapes();
+    if (hRubberPen) {
+        DeleteObject(hRubberPen);
+    }
+}
+
+void MyEditor::ClearShapes() {
     for (int i = 0; i < shapeCount; ++i) {
         if (pcshape[i]) {
             delete pcshape[i];
             pcshape[i] = NULL;
         }
     }
-    if (hRubberPen) {
-        DeleteObject(hRubberPen);
+    shapeCount = 0;
+    selectedIndex = -1;
+}
+
+void MyEditor::DeleteShape(int index) {
+    if (index < 0 || index >= shapeCount) return;
+    
+    delete pcshape[index];
+    for (int i = index; i < shapeCount - 1; ++i) {
+        pcshape[i] = pcshape[i + 1];
+    }
+    pcshape[shapeCount - 1] = nullptr;
+    shapeCount--;
+
+    if (selectedIndex == index) selectedIndex = -1;
+    else if (selectedIndex > index) selectedIndex--;
+}
+
+void MyEditor::AddShape(Shape* pShape) {
+    if (shapeCount < MAX_SHAPES && pShape) {
+        pcshape[shapeCount++] = pShape;
     }
 }
 
@@ -209,10 +235,34 @@ void MyEditor::OnPaint(HWND hWnd) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hWnd, &ps);
 
+    // 1. Малюємо всі фігури
     for (int i = 0; i < shapeCount; ++i) {
         if (pcshape[i]) {
             pcshape[i]->Draw(hdc);
         }
+    }
+
+    // 2. Бонус 1: Підсвічуємо виділену фігуру червоним пунктиром
+    if (selectedIndex >= 0 && selectedIndex < shapeCount && pcshape[selectedIndex]) {
+        int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+        pcshape[selectedIndex]->GetPoints(x1, y1, x2, y2);
+
+        int minX = (x1 < x2 ? x1 : x2) - 5;
+        int minY = (y1 < y2 ? y1 : y2) - 5;
+        int maxX = (x1 > x2 ? x1 : x2) + 5;
+        int maxY = (y1 > y2 ? y1 : y2) + 5;
+
+        HPEN hRedPen = CreatePen(PS_DASH, 2, RGB(255, 0, 0));
+        HBRUSH hNullBrush = (HBRUSH)GetStockObject(NULL_BRUSH);
+
+        HPEN hOldPen = (HPEN)SelectObject(hdc, hRedPen);
+        HBRUSH hOldBrush = (HBRUSH)SelectObject(hdc, hNullBrush);
+
+        Rectangle(hdc, minX, minY, maxX, maxY);
+
+        SelectObject(hdc, hOldPen);
+        SelectObject(hdc, hOldBrush);
+        DeleteObject(hRedPen);
     }
 
     EndPaint(hWnd, &ps);
