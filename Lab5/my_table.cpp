@@ -1,5 +1,4 @@
 #include "my_table.h"
-#include "editor.h"
 #include "resource.h"
 #include <fstream>
 #include <sstream>
@@ -24,6 +23,7 @@ void MyTable::destroyInstance() {
 MyTable::MyTable() {
     hDlg = NULL;
     hListView = NULL;
+    pListener = nullptr;
 }
 
 MyTable::~MyTable() {
@@ -68,7 +68,6 @@ INT_PTR CALLBACK MyTable::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
         case WM_NOTIFY: {
             LPNMHDR pnmh = (LPNMHDR)lParam;
             if (pnmh->idFrom == IDC_LIST_TABLE) {
-                // Бонус 1: Відстежуємо виділення рядка у таблиці
                 if (pnmh->code == LVN_ITEMCHANGED) {
                     LPNMLISTVIEW pnmv = (LPNMLISTVIEW)lParam;
                     if ((pnmv->uNewState & LVIS_SELECTED) != (pnmv->uOldState & LVIS_SELECTED)) {
@@ -79,7 +78,6 @@ INT_PTR CALLBACK MyTable::DlgProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lP
                         }
                     }
                 }
-                // Бонус 2: Видалення об'єкта по клавіші DELETE
                 else if (pnmh->code == LVN_KEYDOWN) {
                     LPNMLVKEYDOWN pnkd = (LPNMLVKEYDOWN)lParam;
                     if (pnkd->wVKey == VK_DELETE) {
@@ -133,27 +131,21 @@ void MyTable::InitListView() {
 }
 
 void MyTable::Update() {
-    if (!hDlg || !IsWindowVisible(hDlg) || !hListView) return;
+    if (!hDlg || !IsWindowVisible(hDlg) || !hListView || !pListener) return;
 
     ListView_DeleteAllItems(hListView);
 
-    MyEditor* editor = MyEditor::getInstance();
-    int count = editor->GetShapeCount();
+    int count = pListener->OnTableGetShapeCount();
 
     for (int i = 0; i < count; ++i) {
-        Shape* shape = editor->GetShape(i);
-        if (!shape) continue;
+        wchar_t nameBuf[64] = L"Фігура";
+        int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
+
+        if (!pListener->OnTableGetShapeData(i, nameBuf, 64, x1, y1, x2, y2)) continue;
 
         LVITEM lvi = { 0 };
         lvi.mask = LVIF_TEXT;
         lvi.iItem = i;
-
-        wchar_t nameBuf[64] = L"Фігура";
-        int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
-
-        shape->GetName(nameBuf, 64);
-        shape->GetPoints(x1, y1, x2, y2);
-
         lvi.pszText = nameBuf;
         ListView_InsertItem(hListView, &lvi);
 
@@ -174,6 +166,8 @@ void MyTable::Update() {
 }
 
 void MyTable::ExportToCSV(HWND hWndParent) {
+    if (!pListener) return;
+
     wchar_t szFile[260] = L"shapes.csv";
 
     OPENFILENAME ofn;
@@ -194,20 +188,15 @@ void MyTable::ExportToCSV(HWND hWndParent) {
         if (outFile.is_open()) {
             outFile << L"Назва,x1,y1,x2,y2\n";
 
-            MyEditor* editor = MyEditor::getInstance();
-            int count = editor->GetShapeCount();
+            int count = pListener->OnTableGetShapeCount();
 
             for (int i = 0; i < count; ++i) {
-                Shape* shape = editor->GetShape(i);
-                if (!shape) continue;
-
                 wchar_t nameBuf[64] = L"";
                 int x1 = 0, y1 = 0, x2 = 0, y2 = 0;
 
-                shape->GetName(nameBuf, 64);
-                shape->GetPoints(x1, y1, x2, y2);
-
-                outFile << nameBuf << L"," << x1 << L"," << y1 << L"," << x2 << L"," << y2 << L"\n";
+                if (pListener->OnTableGetShapeData(i, nameBuf, 64, x1, y1, x2, y2)) {
+                    outFile << nameBuf << L"," << x1 << L"," << y1 << L"," << x2 << L"," << y2 << L"\n";
+                }
             }
             outFile.close();
             MessageBox(hWndParent, L"Дані успішно збережено в CSV файл!", L"Експорт", MB_OK | MB_ICONINFORMATION);
@@ -216,6 +205,8 @@ void MyTable::ExportToCSV(HWND hWndParent) {
 }
 
 void MyTable::ImportFromCSV(HWND hWndParent) {
+    if (!pListener) return;
+
     wchar_t szFile[260] = L"";
 
     OPENFILENAME ofn;
@@ -234,8 +225,7 @@ void MyTable::ImportFromCSV(HWND hWndParent) {
 
         std::wifstream inFile(szFileA);
         if (inFile.is_open()) {
-            MyEditor* editor = MyEditor::getInstance();
-            editor->ClearShapes(); 
+            pListener->OnTableClearShapes(); 
 
             std::wstring line;
             bool firstLine = true;
@@ -262,18 +252,7 @@ void MyTable::ImportFromCSV(HWND hWndParent) {
                     int x2 = _wtoi(x2Str.c_str());
                     int y2 = _wtoi(y2Str.c_str());
 
-                    Shape* newShape = nullptr;
-                    if (nameStr == L"Крапка" || nameStr == L"Точка") newShape = new PointShape();
-                    else if (nameStr == L"Лінія") newShape = new LineShape();
-                    else if (nameStr == L"Прямокутник") newShape = new RectangleShape();
-                    else if (nameStr == L"Еліпс") newShape = new EllipseShape();
-                    else if (nameStr == L"Лінія з кружечками") newShape = new LineOOShape();
-                    else if (nameStr == L"Куб") newShape = new CubeShape();
-
-                    if (newShape) {
-                        newShape->SetPoints(x1, y1, x2, y2);
-                        editor->AddShape(newShape);
-                    }
+                    pListener->OnTableAddShape(nameStr.c_str(), x1, y1, x2, y2);
                 }
             }
             inFile.close();
